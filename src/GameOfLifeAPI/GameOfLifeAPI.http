@@ -1,0 +1,5 @@
+@GameOfLifeAPI_HostAddress = http://localhost:5237
+
+GET {{GameOfLifeAPI_HostAddress}}/
+Accept: application/json
+
