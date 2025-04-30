@@ -1,11 +1,11 @@
+using Microsoft.AspNetCore.Mvc;
 using GameOfLifeAPI.Models;
 using GameOfLifeAPI.Services;
-using Microsoft.AspNetCore.Mvc;
 
 namespace GameOfLifeAPI.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("boards")]
     public class BoardsController : ControllerBase
     {
         private readonly BoardService _boardService;
@@ -16,10 +16,15 @@ namespace GameOfLifeAPI.Controllers
         }
 
         [HttpPost]
-        public IActionResult UploadBoard([FromBody] bool[,] state)
+        public IActionResult CreateBoard([FromBody] List<List<bool>> state)
         {
-            var id = _boardService.UploadBoard(state);
-            return CreatedAtAction(nameof(GetBoard), new { id }, new { id });
+            if (state == null)
+            {
+                return BadRequest("State cannot be null");
+            }
+
+            var board = _boardService.CreateBoard(state);
+            return CreatedAtAction(nameof(GetBoard), new { id = board.Id }, board);
         }
 
         [HttpGet("{id}")]
@@ -27,9 +32,10 @@ namespace GameOfLifeAPI.Controllers
         {
             var board = _boardService.GetBoard(id);
             if (board == null)
+            {
                 return NotFound();
+            }
             return Ok(board);
         }
-        
     }
 }
