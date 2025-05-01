@@ -110,7 +110,42 @@ namespace GameOfLifeAPI.Services
 
             return current;
         }
+        
+        public List<List<bool>>? GetFinalState(Guid id, int maxIterations = 1000)
+        {
+            if (!_boards.TryGetValue(id, out var board) || board.State == null)
+                return null;
 
+            var previous = DeepCopy(board.State);
+            var current = previous;
+
+            for (int i = 0; i < maxIterations; i++)
+            {
+                current = ComputeNextState(current);
+
+                if (AreBoardsEqual(previous, current))
+                    return current;
+
+                previous = DeepCopy(current);
+            }
+
+            return null;
+        }
+
+        private bool AreBoardsEqual(List<List<bool>> a, List<List<bool>> b)
+        {
+            if (a.Count != b.Count || a[0].Count != b[0].Count)
+                return false;
+
+            for (int i = 0; i < a.Count; i++)
+            for (int j = 0; j < a[i].Count; j++)
+                if (a[i][j] != b[i][j])
+                    return false;
+
+            return true;
+        }
+
+        // private methods
         private List<List<bool>> ComputeNextState(List<List<bool>> state)
         {
             int rows = state.Count;
