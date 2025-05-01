@@ -37,5 +37,25 @@ namespace GameOfLifeAPI.Controllers
             }
             return Ok(board);
         }
+        
+        [HttpGet("{id}/next")]
+        public IActionResult GetNextState(Guid id)
+        {
+            var nextSstate = _boardService.GetNextState(id);
+            if (nextSstate == null)
+                return NotFound();
+
+            return Ok(nextSstate);
+        }
+
+        [HttpGet("{id}/next/{steps:int}")]
+        public IActionResult GetStateAfterSteps(Guid id, int steps)
+        {
+            var result = _boardService.GetStateAfterSteps(id, steps);
+            if (result == null)
+                return NotFound();
+
+            return Ok(result);
+        }
     }
 }
