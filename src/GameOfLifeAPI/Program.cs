@@ -9,6 +9,9 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+var boardService = app.Services.GetRequiredService<BoardService>();
+boardService.RetrieveBoardsFromLocalStorage(); // to fetch board data from local file 
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

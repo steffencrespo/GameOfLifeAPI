@@ -1,9 +1,11 @@
 using GameOfLifeAPI.Models;
+using System.Text.Json;
 
 namespace GameOfLifeAPI.Services
 {
     public class BoardService
     {
+		private readonly string _storagePath = Path.Combine(AppContext.BaseDirectory, "boards.json");
         private readonly Dictionary<Guid, Board> _boards = new();
 
         public Board UploadBoard(List<List<bool>> state)
@@ -40,6 +42,7 @@ namespace GameOfLifeAPI.Services
             };
 
             _boards[board.Id] = board;
+            PersistBoardsToLocalStorage();
             return board;
         }
 
@@ -132,9 +135,9 @@ namespace GameOfLifeAPI.Services
             return null;
         }
 
-        private bool AreBoardsEqual(List<List<bool>> a, List<List<bool>> b)
+    	private bool AreBoardsEqual(List<List<bool>> a, List<List<bool>> b)
         {
-            if (a.Count != b.Count || a[0].Count != b[0].Count)
+            if (a.Count != b.Count || a[0].Count != b[0].Count) 
                 return false;
 
             for (int i = 0; i < a.Count; i++)
@@ -176,6 +179,27 @@ namespace GameOfLifeAPI.Services
         private List<List<bool>> DeepCopy(List<List<bool>> source)
         {
             return source.Select(row => new List<bool>(row)).ToList();
+        }
+        
+        public void PersistBoardsToLocalStorage()
+        {
+            var json = JsonSerializer.Serialize(_boards);
+            File.WriteAllText(_storagePath, json);
+        }
+
+        public void RetrieveBoardsFromLocalStorage()
+        {
+            if (!File.Exists(_storagePath))
+                return;
+
+            var json = File.ReadAllText(_storagePath);
+            var loaded = JsonSerializer.Deserialize<Dictionary<Guid, Board>>(json);
+            if (loaded != null)
+            {
+                _boards.Clear();
+                foreach (var kv in loaded)
+                    _boards[kv.Key] = kv.Value;
+            }
         }
     }
 }
