@@ -14,11 +14,11 @@ var app = builder.Build();
 var boardService = app.Services.GetRequiredService<IBoardService>();
 boardService.RetrieveBoardsFromLocalStorage(); // to fetch board data from local file 
 
-//if (app.Environment.IsDevelopment()) // removed so that swagger runs in the docker container prod/release 
-//{
+if (app.Environment.IsDevelopment())
+{
     app.UseSwagger();
     app.UseSwaggerUI();
-//}
+}
 
 //app.UseHttpsRedirection(); // ignoring https redirect to be able to run in a docker container
 app.UseAuthorization();
