@@ -6,6 +6,87 @@ namespace GameOfLifeAPI.Tests
 {
     public class BoardServiceTests
     {
+
+		[Fact]
+		public void GetNextState_ShouldReturnSameState_WhenStepsIsZero()
+		{
+		    // Arrange
+    		var service = new BoardService();
+    		var initialState = new List<List<bool>>
+   	 		{
+   	     		new() { true, false },
+   	     		new() { false, true }
+    		};
+    		
+			var board = service.CreateBoard(initialState);
+
+    		// Act
+    		var result = service.GetStateAfterSteps(board.Id, 0);
+	
+    		// Assert
+    		Assert.NotNull(result);
+    		Assert.Equal(initialState.Count, result!.Count);
+
+	    	for (int i = 0; i < initialState.Count; i++)
+    		{
+        		Assert.Equal(initialState[i], result[i]);
+    		}
+		}
+
+		[Fact]
+		public void GetFinalState_ShouldReturnError_WhenBoardDoesNotStabilize()
+		{
+    		// Arrange
+    		var service = new BoardService();
+    		var blinker = new List<List<bool>>
+    		{
+        		new() { false, true, false },
+        		new() { false, true, false },
+        		new() { false, true, false }
+    		};
+    
+    		var board = service.CreateBoard(blinker);
+
+    		// Act & Assert
+    		var exception = Assert.Throws<InvalidOperationException>(() =>
+    		{
+        		service.GetFinalState(board.Id);
+    		});
+
+    		Assert.Equal("Board did not reach a stable state after 1000 steps.", exception.Message);
+		}
+
+		[Fact]
+		public void CreateBoard_ShouldThrowException_WhenStateIsNull()
+		{
+    		// Arrange
+    		var service = new BoardService();
+
+    		// Act & Assert
+    		var exception = Assert.Throws<ArgumentException>(() =>
+    		{
+        		service.CreateBoard(null!);
+    		});
+
+    		Assert.Equal("State must be a non-empty 2D list", exception.Message);
+		}
+
+		[Fact]
+		public void CreateBoard_ShouldThrowException_WhenStateIsEmpty()
+		{
+    		// Arrange
+    		var service = new BoardService();
+    		var emptyState = new List<List<bool>>();
+
+    		// Act & Assert
+    		var exception = Assert.Throws<ArgumentException>(() =>
+    		{
+        		service.CreateBoard(emptyState);
+    		});
+
+    		Assert.Equal("State must be a non-empty 2D list", exception.Message);
+		}
+
         [Fact]
         public void GetNextState_ShouldCorrectlyComputeNextGeneration()
         {

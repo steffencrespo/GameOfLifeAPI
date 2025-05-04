@@ -49,10 +49,6 @@ And then, open the report
 open coverage-report/index.html
 
 ```
-
-~/.dotnet/tools/reportgenerator -reports:"/Users/leonardosteffen/Dev/GameOfLifeAPI/src/GameOfLifeAPI.Tests/TestResults/06cca8e8-8e9c-480d-9f26-2f4d259ecfcd/coverage.cobertura.xml" -targetdir:"coverage-report" -reporttypes:Html
-
-
 ---
 
 ## Endpoints
