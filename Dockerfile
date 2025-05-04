@@ -8,13 +8,19 @@ COPY GameOfLifeSolution.sln .
 COPY src/GameOfLifeAPI/*.csproj ./src/GameOfLifeAPI/
 COPY src/GameOfLifeAPI.Tests/*.csproj ./src/GameOfLifeAPI.Tests/
 
-# Restore dependencies
-RUN dotnet restore GameOfLifeSolution.sln
-
 # Copy the rest
 COPY . .
 
-# Build and publish
+# Restore dependencies with all files present
+RUN dotnet restore GameOfLifeSolution.sln
+
+# Build the solution
+RUN dotnet build GameOfLifeSolution.sln --no-restore
+
+# Run tests
+RUN dotnet test src/GameOfLifeAPI.Tests/GameOfLifeAPI.Tests.csproj --no-restore --verbosity normal
+
+# Publish app
 WORKDIR /app/src/GameOfLifeAPI
 RUN dotnet publish -c Release -o /app/publish
 
