@@ -7,7 +7,7 @@ It supports board creation, evolution through generations, state stabilization, 
 
 ## Requirements
 
-- .NET SDK 7.0
+- .NET SDK 8.0
 
 ---
 
@@ -30,6 +30,29 @@ cd src/GameOfLifeAPI.Tests
 dotnet test
 ```
 
+## Running Tests with Coverage Report
+
+Test coverage reports are generated with coverlet.collector.
+
+```bash
+cd src/GameOfLifeAPI.Tests
+dotnet test --collect:"XPlat Code Coverage"
+```
+
+Once the coverage report is ready, generate an HTML report with the xml file generated in TestResults/
+```bash
+~/.dotnet/tools/reportgenerator -reports:"TestResults/**/coverage.cobertura.xml" -targetdir:"coverage-report" -reporttypes:Html
+```
+
+And then, open the report
+```bash
+open coverage-report/index.html
+
+```
+
+~/.dotnet/tools/reportgenerator -reports:"/Users/leonardosteffen/Dev/GameOfLifeAPI/src/GameOfLifeAPI.Tests/TestResults/06cca8e8-8e9c-480d-9f26-2f4d259ecfcd/coverage.cobertura.xml" -targetdir:"coverage-report" -reporttypes:Html
+
+
 ---
 
 ## Endpoints
@@ -41,13 +64,11 @@ Create a new board.
 **Request body:**
 
 ```json
-{
-  "state": [
+[
     [true, false, true],
     [false, true, false],
     [true, false, true]
-  ]
-}
+]
 ```
 
 **Response:**
