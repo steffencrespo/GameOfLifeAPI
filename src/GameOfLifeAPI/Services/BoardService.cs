@@ -3,7 +3,7 @@ using System.Text.Json;
 
 namespace GameOfLifeAPI.Services
 {
-    public class BoardService
+    public class BoardService : IBoardService
     {
 		private readonly string _storagePath = Path.Combine(AppContext.BaseDirectory, "boards.json");
         private readonly Dictionary<Guid, Board> _boards = new();

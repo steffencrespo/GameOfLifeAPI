@@ -8,9 +8,9 @@ namespace GameOfLifeAPI.Controllers
     [Route("boards")]
     public class BoardsController : ControllerBase
     {
-        private readonly BoardService _boardService;
+		private readonly IBoardService _boardService;
 
-        public BoardsController(BoardService boardService)
+        public BoardsController(IBoardService boardService)
         {
             _boardService = boardService;
         }
