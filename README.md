@@ -18,8 +18,8 @@ cd src/GameOfLifeAPI
 dotnet run
 ```
 
-API base URL: `http://localhost:5237`  
-Swagger UI: `http://localhost:5237/swagger`
+API base URL: `http://localhost:80`  
+Swagger UI: `http://localhost:80/swagger`
 
 ---
 
