@@ -132,7 +132,7 @@ namespace GameOfLifeAPI.Services
                 previous = DeepCopy(current);
             }
 
-            return null;
+            throw new InvalidOperationException("Board did not reach a stable state after 1000 steps.");
         }
 
     	private bool AreBoardsEqual(List<List<bool>> a, List<List<bool>> b)
