@@ -64,7 +64,7 @@ namespace GameOfLifeAPI.Controllers
             var final = _boardService.GetFinalState(id);
 
             if (final == null)
-                return StatusCode(500, "Unable to stabilize board after max steps");
+                return StatusCode(404, "Unable to stabilize board after max steps");
 
             return Ok(final);
         }
