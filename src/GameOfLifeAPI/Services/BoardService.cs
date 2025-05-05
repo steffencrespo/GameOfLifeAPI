@@ -5,8 +5,15 @@ namespace GameOfLifeAPI.Services
 {
     public class BoardService : IBoardService
     {
+		private readonly ILogger<BoardService> _logger;
 		private readonly string _storagePath = Path.Combine(AppContext.BaseDirectory, "boards.json");
         private readonly Dictionary<Guid, Board> _boards = new();
+
+		public BoardService(ILogger<BoardService> logger)
+		{
+    		_logger = logger;
+    		_boards = new Dictionary<Guid, Board>();
+		}
 
         public Board UploadBoard(List<List<bool>> state)
         {
@@ -25,6 +32,7 @@ namespace GameOfLifeAPI.Services
 
         public Board? GetBoard(Guid id)
         {
+			_logger.LogDebug("Retrieving board with ID {BoardId}", id);
             _boards.TryGetValue(id, out var board);
             return board;
         }
@@ -42,6 +50,7 @@ namespace GameOfLifeAPI.Services
             };
 
             _boards[board.Id] = board;
+			_logger.LogInformation("Creating new board with id {BoardId}", board.Id);
             PersistBoardsToLocalStorage();
             return board;
         }
@@ -49,6 +58,8 @@ namespace GameOfLifeAPI.Services
         // to retrieve the next state of the board
         public List<List<bool>>? GetNextState(Guid id)
         {
+			_logger.LogInformation("Getting next state for board {BoardId}", id);
+
             if (!_boards.TryGetValue(id, out var board) || board.State == null)
                 return null;
 
@@ -116,6 +127,8 @@ namespace GameOfLifeAPI.Services
         
         public List<List<bool>>? GetFinalState(Guid id, int maxIterations = 1000)
         {
+			_logger.LogInformation("Searching for final state for board {BoardId} with max {MaxSteps} steps", id, maxIterations);
+
             if (!_boards.TryGetValue(id, out var board) || board.State == null)
                 return null;
 
@@ -132,6 +145,7 @@ namespace GameOfLifeAPI.Services
                 previous = DeepCopy(current);
             }
 
+			_logger.LogWarning("Board {BoardId} did not stabilize after {MaxSteps} steps", id, maxIterations);
             throw new InvalidOperationException("Board did not reach a stable state after 1000 steps.");
         }
 
@@ -183,6 +197,7 @@ namespace GameOfLifeAPI.Services
         
         public void PersistBoardsToLocalStorage()
         {
+			_logger.LogInformation("Saved {Count} boards to local storage", _boards.Count);
             var json = JsonSerializer.Serialize(_boards);
             File.WriteAllText(_storagePath, json);
         }
@@ -192,6 +207,7 @@ namespace GameOfLifeAPI.Services
             if (!File.Exists(_storagePath))
                 return;
 
+			_logger.LogInformation("Loaded {Count} boards from local storage", _boards.Count);
             var json = File.ReadAllText(_storagePath);
             var loaded = JsonSerializer.Deserialize<Dictionary<Guid, Board>>(json);
             if (loaded != null)
