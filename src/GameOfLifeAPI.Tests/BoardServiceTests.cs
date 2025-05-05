@@ -1,6 +1,8 @@
 using GameOfLifeAPI.Models;
 using GameOfLifeAPI.Services;
+using Microsoft.Extensions.Logging;
 using Xunit;
+using Moq;
 
 namespace GameOfLifeAPI.Tests
 {
@@ -11,7 +13,7 @@ namespace GameOfLifeAPI.Tests
 		public void GetNextState_ShouldReturnSameState_WhenStepsIsZero()
 		{
 		    // Arrange
-    		var service = new BoardService();
+    		var service = CreateService();
     		var initialState = new List<List<bool>>
    	 		{
    	     		new() { true, false },
@@ -37,7 +39,7 @@ namespace GameOfLifeAPI.Tests
 		public void GetFinalState_ShouldReturnError_WhenBoardDoesNotStabilize()
 		{
     		// Arrange
-    		var service = new BoardService();
+    		var service = CreateService();
     		var blinker = new List<List<bool>>
     		{
         		new() { false, true, false },
@@ -60,7 +62,7 @@ namespace GameOfLifeAPI.Tests
 		public void CreateBoard_ShouldThrowException_WhenStateIsNull()
 		{
     		// Arrange
-    		var service = new BoardService();
+    		var service = CreateService();
 
     		// Act & Assert
     		var exception = Assert.Throws<ArgumentException>(() =>
@@ -75,7 +77,7 @@ namespace GameOfLifeAPI.Tests
 		public void CreateBoard_ShouldThrowException_WhenStateIsEmpty()
 		{
     		// Arrange
-    		var service = new BoardService();
+    		var service = CreateService();
     		var emptyState = new List<List<bool>>();
 
     		// Act & Assert
@@ -91,7 +93,7 @@ namespace GameOfLifeAPI.Tests
         public void GetNextState_ShouldCorrectlyComputeNextGeneration()
         {
             // Arrange
-            var service = new BoardService();
+            var service = CreateService();
             var initialState = new List<List<bool>>
             {
                 new() { false, true, false },
@@ -124,7 +126,7 @@ namespace GameOfLifeAPI.Tests
         public void GetStateAfterSteps_ShouldReturnCorrectResult_AfterMultipleGenerations()
         {
             // Arrange
-            var service = new BoardService();
+            var service = CreateService();
             var initialState = new List<List<bool>>
             {
                 new() { false, true, false },
@@ -157,7 +159,7 @@ namespace GameOfLifeAPI.Tests
         public void CreateBoard_ShouldStoreBoardWithCorrectInitialState()
         {
             // Arrange
-            var service = new BoardService();
+            var service = CreateService();
             var initialState = new List<List<bool>>
             {
                 new() { true, false },
@@ -180,7 +182,7 @@ namespace GameOfLifeAPI.Tests
         public void GetBoard_ShouldReturnNull_IfBoardDoesNotExist()
         {
             // Arrange
-            var service = new BoardService();
+            var service = CreateService();
             var fakeId = Guid.NewGuid();
 
             // Act
@@ -194,7 +196,7 @@ namespace GameOfLifeAPI.Tests
         public void GetNextState_ShouldReturnNull_ForInvalidBoardId()
         {
             // Arrange
-            var service = new BoardService();
+            var service = CreateService();
             var invalidId = Guid.NewGuid();
 
             // Act
@@ -209,7 +211,7 @@ namespace GameOfLifeAPI.Tests
         public void GetStateAfterSteps_ShouldReturnExpectedResult(List<List<bool>> initial, int steps, List<List<bool>> expected)
         {
             // Arrange
-            var service = new BoardService();
+            var service = CreateService();
             var board = service.CreateBoard(initial);
 
             // Act
@@ -262,5 +264,11 @@ namespace GameOfLifeAPI.Tests
                 }
             };
         }
+		
+		private BoardService CreateService()
+		{
+			var mockLogger = new Mock<ILogger<BoardService>>();
+			return new BoardService(mockLogger.Object);
+		}
     }
 }
