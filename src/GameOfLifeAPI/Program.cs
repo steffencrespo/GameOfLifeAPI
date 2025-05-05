@@ -6,8 +6,15 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.WebHost.UseUrls("http://0.0.0.0:80");
-
 builder.Services.AddSingleton<IBoardService, BoardService>();
+
+// Setting swagger to generate xml comments
+builder.Services.AddSwaggerGen(options =>
+{
+    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    options.IncludeXmlComments(xmlPath);
+});
 
 var app = builder.Build();
 
