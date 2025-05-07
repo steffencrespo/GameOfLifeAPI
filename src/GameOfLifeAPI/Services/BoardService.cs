@@ -1,4 +1,5 @@
 using GameOfLifeAPI.Models;
+using System.Collections.Concurrent;
 using System.Text.Json;
 
 namespace GameOfLifeAPI.Services
@@ -7,12 +8,12 @@ namespace GameOfLifeAPI.Services
     {
 		private readonly ILogger<BoardService> _logger;
 		private readonly string _storagePath = Path.Combine(AppContext.BaseDirectory, "boards.json");
-        private readonly Dictionary<Guid, Board> _boards = new();
+        private readonly ConcurrentDictionary<Guid, Board> _boards = new();
 
 		public BoardService(ILogger<BoardService> logger)
 		{
     		_logger = logger;
-    		_boards = new Dictionary<Guid, Board>();
+    		_boards = new ConcurrentDictionary<Guid, Board>();
 		}
 
         public Board UploadBoard(List<List<bool>> state)
@@ -207,15 +208,15 @@ namespace GameOfLifeAPI.Services
             if (!File.Exists(_storagePath))
                 return;
 
-			_logger.LogInformation("Loaded {Count} boards from local storage", _boards.Count);
             var json = File.ReadAllText(_storagePath);
             var loaded = JsonSerializer.Deserialize<Dictionary<Guid, Board>>(json);
             if (loaded != null)
             {
-                _boards.Clear();
                 foreach (var kv in loaded)
-                    _boards[kv.Key] = kv.Value;
+                    _boards.AddOrUpdate(kv.Key, kv.Value, (key, oldValue) => kv.Value);
             }
+
+			_logger.LogInformation("Loaded {Count} boards from local storage", _boards.Count);
         }
     }
 }
