@@ -9,6 +9,7 @@ namespace GameOfLifeAPI.Services
 		private readonly ILogger<BoardService> _logger;
 		private readonly string _storagePath = Path.Combine(AppContext.BaseDirectory, "boards.json");
         private readonly ConcurrentDictionary<Guid, Board> _boards = new();
+        private readonly object _lock = new();
 
 		public BoardService(ILogger<BoardService> logger)
 		{
@@ -121,24 +122,33 @@ namespace GameOfLifeAPI.Services
         {
 			_logger.LogInformation("Searching for final state for board {BoardId} with max {MaxSteps} steps", id, maxIterations);
 
-            if (!_boards.TryGetValue(id, out var board) || board.State == null)
-                return null;
+            if (maxIterations <= 0)
+                throw new ArgumentException("Max steps must be a positive integer");
 
-            var previous = DeepCopy(board.State);
-            var current = previous;
-
-            for (int i = 0; i < maxIterations; i++)
+            lock (_lock)
             {
-                current = ComputeNextState(current);
+                if (!_boards.TryGetValue(id, out var board) || board.State == null)
+                    return null;
 
-                if (AreBoardsEqual(previous, current))
-                    return current;
+                var previous = DeepCopy(board.State);
+                var current = previous;
 
-                previous = DeepCopy(current);
+                for (int i = 0; i < maxIterations; i++)
+                {
+                    current = ComputeNextState(current);
+
+                    if (AreBoardsEqual(previous, current))
+                    {
+                        _logger.LogInformation("Board {BoardId} reached a stable state after {MaxSteps} steps", id, i);
+                        return current;
+                    }
+                    
+                    previous = DeepCopy(current);
+                }
+                
+                _logger.LogWarning("Board {BoardId} did not stabilize after {MaxSteps} steps", id, maxIterations);
+                return null;
             }
-
-			_logger.LogWarning("Board {BoardId} did not stabilize after {MaxSteps} steps", id, maxIterations);
-            throw new InvalidOperationException("Board did not reach a stable state after 1000 steps.");
         }
 
     	private bool AreBoardsEqual(List<List<bool>> a, List<List<bool>> b)
