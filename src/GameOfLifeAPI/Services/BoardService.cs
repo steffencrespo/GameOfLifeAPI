@@ -7,15 +7,21 @@ namespace GameOfLifeAPI.Services
     public class BoardService : IBoardService
     {
 		private readonly ILogger<BoardService> _logger;
-		private readonly string _storagePath = Path.Combine(AppContext.BaseDirectory, "boards.json");
+		private readonly string _storagePath;
         private readonly ConcurrentDictionary<Guid, Board> _boards = new();
         private readonly object _lock = new();
 
 		public BoardService(ILogger<BoardService> logger)
 		{
-    		_logger = logger;
-    		_boards = new ConcurrentDictionary<Guid, Board>();
-		}
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _boards = new ConcurrentDictionary<Guid, Board>();
+
+            var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            var directoryPath = Path.Combine(appData, "GameOfLifeAPI");
+            Directory.CreateDirectory(directoryPath);
+
+            _storagePath = Path.Combine(directoryPath, "boards.json");
+        }
 
         public Board UploadBoard(List<List<bool>> state)
         {
@@ -201,17 +207,24 @@ namespace GameOfLifeAPI.Services
         {
             try
             {
-                var snapshot =
-                    _boards.ToDictionary(entry => entry.Key,
-                        entry => entry.Value); // enclosed copy of the data to avoid race condition while seriaslizing
-                
-                var json = JsonSerializer.Serialize(snapshot, new JsonSerializerOptions
+                lock (_lock) // to avoid race condition with GetNextState()
                 {
-                    WriteIndented = true
-                });
+                    var snapshot =
+                        _boards.ToDictionary(entry => entry.Key,
+                            entry => entry.Value); // enclosed copy of the data to avoid race condition while seriaslizing
+                    
+                    var json = JsonSerializer.Serialize(snapshot, new JsonSerializerOptions
+                    {
+                        WriteIndented = true
+                    });
 
-                File.WriteAllText(_storagePath, json);
-                _logger.LogInformation("Saved {Count} boards to local storage", snapshot.Count);
+                    var tempPath = _storagePath + ".tmp";
+                    
+                    File.WriteAllText(_storagePath, json);
+                    File.Replace(tempPath, _storagePath, null);
+                    
+                    _logger.LogInformation("Saved {Count} boards to local storage", snapshot.Count);
+                }
             }
             catch (Exception ex)
             {
@@ -224,15 +237,30 @@ namespace GameOfLifeAPI.Services
             if (!File.Exists(_storagePath))
                 return;
 
-            var json = File.ReadAllText(_storagePath);
-            var loaded = JsonSerializer.Deserialize<Dictionary<Guid, Board>>(json);
-            if (loaded != null)
+            try
             {
-                foreach (var kv in loaded)
-                    _boards.AddOrUpdate(kv.Key, kv.Value, (key, oldValue) => kv.Value);
+                lock (_lock) // to avoid race condition
+                {
+                    var json = File.ReadAllText(_storagePath);
+                    var loaded = JsonSerializer.Deserialize<Dictionary<Guid, Board>>(json);
+
+                    if (loaded == null)
+                    {
+                        _logger.LogWarning("No boards found in local storage");
+                        return;
+                    }
+
+                    foreach (var kv in loaded)
+                        _boards.AddOrUpdate(kv.Key, kv.Value, (key, oldValue) => kv.Value);
+                }
+
+                _logger.LogInformation("Loaded {Count} boards from local storage", _boards.Count);
             }
 
-			_logger.LogInformation("Loaded {Count} boards from local storage", _boards.Count);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving boards from local storage");
+            }
         }
     }
 }
