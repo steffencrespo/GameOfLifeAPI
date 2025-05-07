@@ -198,9 +198,24 @@ namespace GameOfLifeAPI.Services
         
         public void PersistBoardsToLocalStorage()
         {
-			_logger.LogInformation("Saved {Count} boards to local storage", _boards.Count);
-            var json = JsonSerializer.Serialize(_boards);
-            File.WriteAllText(_storagePath, json);
+            try
+            {
+                var snapshot =
+                    _boards.ToDictionary(entry => entry.Key,
+                        entry => entry.Value); // enclosed copy of the data to avoid race condition while seriaslizing
+                
+                var json = JsonSerializer.Serialize(snapshot, new JsonSerializerOptions
+                {
+                    WriteIndented = true
+                });
+
+                File.WriteAllText(_storagePath, json);
+                _logger.LogInformation("Saved {Count} boards to local storage", snapshot.Count);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error persisting boards to local storage");
+            }
         }
 
         public void RetrieveBoardsFromLocalStorage()

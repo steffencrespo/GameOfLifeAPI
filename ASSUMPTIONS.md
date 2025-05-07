@@ -51,4 +51,5 @@ This doc outlines key design decisions and assumptions I made during the impleme
 
 ## Notes
 
+- Replaced Dictionary with its thread-safe alternative ConcurrentDictionary.  
 - Additional enhancements (e.g., Docker support, Swagger customization, async I/O) were deprioritized to focus on functional correctness, code clarity, and testability.
