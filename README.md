@@ -7,7 +7,7 @@ It supports board creation, evolution through generations, state stabilization, 
 
 ## Requirements
 
-- .NET SDK 8.0
+- .NET SDK 9.0
 
 ---
 
