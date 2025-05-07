@@ -60,35 +60,20 @@ namespace GameOfLifeAPI.Services
         public List<List<bool>>? GetNextState(Guid id)
         {
 			_logger.LogInformation("Getting next state for board {BoardId}", id);
-
+            
             if (!_boards.TryGetValue(id, out var board) || board.State == null)
                 return null;
 
-            var current = board.State;
-            int rows = current.Count;
-            int columns = current[0].Count;
+            var nextState = ComputeNextState(board.State);
 
-            var next = new List<List<bool>>();
-
-            for (int row = 0; row < rows; row++)
+            _boards.AddOrUpdate(id, _ => board, (_boards, existingBoard) =>
             {
-                var newRow = new List<bool>();
-                for (int col = 0; col < columns; col++)
-                {
-                    int aliveNeighbors = CountAliveNeighbors(current, row, col, rows, columns);
-                    bool cellIsAlive = current[row][col];
+                existingBoard.State = nextState;
+                return existingBoard;
+            });
 
-                    if (cellIsAlive && (aliveNeighbors == 2 || aliveNeighbors == 3))
-                        newRow.Add(true);
-                    else if (!cellIsAlive && aliveNeighbors == 3)
-                        newRow.Add(true);
-                    else
-                        newRow.Add(false);
-                }
-                next.Add(newRow);
-            }
-
-            return next;
+            PersistBoardsToLocalStorage();
+            return nextState;
         }
 
         private int CountAliveNeighbors(List<List<bool>> grid, int row, int col, int rows, int cols)
@@ -113,17 +98,23 @@ namespace GameOfLifeAPI.Services
         
         public List<List<bool>>? GetStateAfterSteps(Guid id, int steps)
         {
-            if (!_boards.TryGetValue(id, out var board) || board.State == null || steps < 0)
-                return null;
+            _logger.LogInformation("Getting state after {Steps} steps for board {BoardId}", steps, id);
+            
+            if (steps < 0)
+                throw new ArgumentException("Steps must be a positive integer");
 
-            var current = DeepCopy(board.State);
-
-            for (int i = 0; i < steps; i++)
+            lock (_lock)
             {
-                current = ComputeNextState(current);
-            }
+                if (!_boards.TryGetValue(id, out var board) || board.State == null)
+                    return null;
 
-            return current;
+                var current = DeepCopy(board.State);
+                
+                for (int i = 0; i < steps; i++)
+                    current = ComputeNextState(current);
+                
+                return current;
+            }
         }
         
         public List<List<bool>>? GetFinalState(Guid id, int maxIterations = 1000)
