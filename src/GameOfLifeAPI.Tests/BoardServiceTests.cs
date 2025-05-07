@@ -36,7 +36,7 @@ namespace GameOfLifeAPI.Tests
 		}
 
 		[Fact]
-		public void GetFinalState_ShouldReturnError_WhenBoardDoesNotStabilize()
+		public void GetFinalState_ShouldReturnNull_WhenBoardDoesNotStabilize()
 		{
     		// Arrange
     		var service = CreateService();
@@ -50,12 +50,10 @@ namespace GameOfLifeAPI.Tests
     		var board = service.CreateBoard(blinker);
 
     		// Act & Assert
-    		var exception = Assert.Throws<InvalidOperationException>(() =>
-    		{
-        		service.GetFinalState(board.Id);
-    		});
+    		
+			var result = service.GetFinalState(board.Id);
 
-    		Assert.Equal("Board did not reach a stable state after 1000 steps.", exception.Message);
+    		Assert.Null(result);
 		}
 
 		[Fact]
